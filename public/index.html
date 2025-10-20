@@ -1,63 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <title>Pegasus IPTV - Login</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: Arial, Helvetica, sans-serif; background:#f4f7fb; color:#222; padding:30px; }
-    .card { max-width:900px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.08); }
-    form { display:flex; gap:10px; justify-content:center; margin-bottom:10px; }
-    input { padding:8px 12px; border-radius:6px; border:1px solid #ddd; }
-    button { padding:8px 14px; border-radius:6px; border:none; background:#0b84ff; color:#fff; cursor:pointer; }
-    .error { color:#b00020; }
-    .credentials { background:#eef6ff; padding:10px; border-radius:6px; margin-bottom:15px; }
-    .category { margin-top:15px; }
-    .channel { display:flex; align-items:center; gap:10px; padding:8px 6px; border-bottom:1px solid #eee; }
-    .channel img { width:56px; height:40px; object-fit:cover; border-radius:4px; }
-    .channel a { color:#0b84ff; text-decoration:none; }
-    .meta { font-size:13px; color:#666; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pegasus IPTV</title>
+<style>body{font-family:Arial;background:#f6f8fb;padding:24px} .card{max-width:900px;margin:0 auto;background:#fff;padding:18px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)} input{padding:8px;border-radius:6px;border:1px solid #ddd;margin-right:8px} button{padding:8px 12px;border-radius:6px;background:#0b84ff;color:#fff;border:none}</style>
 </head>
 <body>
-  <div class="card">
-    <h1>Pegasus IPTV</h1>
-    <p>Entre com seu usuário e senha para ver os canais por categoria (e as credenciais para usar no XCIPTV).</p>
+<div class="card">
+  <h1>Pegasus IPTV</h1>
+  <p>Faça login com seu usuário e senha. Após o login você verá a lista de canais (por categoria) e o link para usar no XCIPTV / Smarters.</p>
 
-    <form id="loginForm">
-      <input id="user" placeholder="Usuário" required>
-      <input id="pass" placeholder="Senha" type="password" required>
-      <button type="submit">Entrar</button>
-    </form>
+  <form id="form">
+    <input id="user" placeholder="Usuário" required>
+    <input id="pass" placeholder="Senha" type="password" required>
+    <button>Entrar</button>
+  </form>
 
-    <div id="error" class="error"></div>
-    <div id="content"></div>
-  </div>
+  <div id="msg" style="color:#b00020;margin-top:8px"></div>
+  <div id="content" style="margin-top:12px"></div>
+</div>
 
 <script>
-const form = document.getElementById('loginForm');
-const content = document.getElementById('content');
-const errorBox = document.getElementById('error');
-
-form.addEventListener('submit', async (e) => {
+const form = document.getElementById('form');
+form.addEventListener('submit', async e=>{
   e.preventDefault();
-  errorBox.textContent = '';
-  content.innerHTML = 'Carregando...';
-  const user = document.getElementById('user').value.trim();
-  const pass = document.getElementById('pass').value.trim();
-
+  document.getElementById('msg').textContent='';
+  document.getElementById('content').innerHTML='Carregando...';
+  const u = document.getElementById('user').value.trim();
+  const p = document.getElementById('pass').value.trim();
   try {
-    const res = await fetch(`/api/view?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
-    const text = await res.text();
-    if (res.ok) {
-      content.innerHTML = text;
-    } else {
-      content.innerHTML = '';
-      errorBox.textContent = text;
+    const r2 = await fetch(`/api/playlist?user=${encodeURIComponent(u)}&pass=${encodeURIComponent(p)}`);
+    if (!r2.ok) {
+      const text = await r2.text();
+      document.getElementById('content').innerHTML='';
+      document.getElementById('msg').textContent = text;
+      return;
     }
-  } catch (err) {
-    content.innerHTML = '';
-    errorBox.textContent = 'Erro no servidor: ' + err.message;
+    const txt = await r2.text();
+    const lines = txt.split('\n').filter(Boolean);
+    let html = '<h3>Playlist (pré-visualização)</h3>';
+    for (let i=0;i<lines.length;i++){
+      if (lines[i].startsWith('#EXTINF')){
+        const info = lines[i];
+        const name = info.split(',').pop();
+        const url = lines[i+1]||'';
+        html += `<div style="padding:6px 0"><strong>${name}</strong><div style="font-size:13px;color:#666">${url}</div></div>`;
+      }
+    }
+    html += `<div style="margin-top:10px;padding:8px;background:#eef6ff;border-radius:6px">Link para XCIPTV / Smarters: <code>${location.origin}/api/playlist</code> (use usuário e senha no app)</div>`;
+    document.getElementById('content').innerHTML = html;
+  } catch (err){
+    document.getElementById('content').innerHTML='';
+    document.getElementById('msg').textContent = 'Erro: '+err.message;
   }
 });
 </script>

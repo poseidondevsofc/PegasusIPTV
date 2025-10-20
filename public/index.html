@@ -47,7 +47,7 @@ form.addEventListener('submit', async (e) => {
   const pass = document.getElementById('pass').value.trim();
 
   try {
-    const res = await fetch(`/view?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
+    const res = await fetch(`/api/view?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
     const text = await res.text();
     if (res.ok) {
       content.innerHTML = text;

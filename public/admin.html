@@ -21,11 +21,11 @@
 <body>
   <div class="wrap">
     <h1>Painel Admin - Pegasus IPTV</h1>
-    <p class="note">Senha do admin: <strong>trouxas</strong></p>
+    <p class="note">Faça login com a senha do administrador.</p>
 
     <div class="card">
       <h2>Login Admin (para mostrar/ocultar painel)</h2>
-      <input id="adminPass" type="password" placeholder="Senha admin (trouxas)" />
+      <input id="adminPass" type="password" placeholder="Senha admin" />
       <button id="btnLogin">Entrar</button>
       <div id="loginMsg" class="small"></div>
     </div>
@@ -85,12 +85,14 @@
   </div>
 
 <script>
+const ADMIN_PASSWORD = 'trouxas'; // senha do admin (não exibida na UI)
+
 function showMsg(id, txt){ document.getElementById(id).textContent = txt; setTimeout(()=>document.getElementById(id).textContent='',3000); }
 
 document.getElementById('btnLogin').addEventListener('click', ()=>{
   const pass = document.getElementById('adminPass').value;
   const loginMsg = document.getElementById('loginMsg');
-  if (pass === 'blemutes') {
+  if (pass === ADMIN_PASSWORD) {
     document.getElementById('panel').style.display = 'block';
     loginMsg.textContent = 'Acesso liberado.';
     loadData();
@@ -100,7 +102,7 @@ document.getElementById('btnLogin').addEventListener('click', ()=>{
 });
 
 async function loadData(){
-  const res = await fetch('/admin/data');
+  const res = await fetch('/api/adminData');
   const j = await res.json();
   // categories
   const catList = document.getElementById('catList');
@@ -138,7 +140,7 @@ document.getElementById('userForm').addEventListener('submit', async (e)=>{
     displayName: f.displayName.value,
     expiresAt: f.expiresAt.value
   };
-  const res = await fetch('/createUser', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const res = await fetch('/api/addUser', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
   const txt = await res.text();
   showMsg('userMsg', txt);
   if (res.ok) loadData();
@@ -148,7 +150,7 @@ document.getElementById('catForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const f = e.target;
   const payload = { admin_password: f.admin_password.value, name: f.name.value.trim() };
-  const res = await fetch('/addCategory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const res = await fetch('/api/addCategory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
   const txt = await res.text();
   showMsg('catMsg', txt);
   if (res.ok) loadData();
@@ -164,7 +166,7 @@ document.getElementById('channelForm').addEventListener('submit', async (e)=>{
     logo: f.logo.value,
     categoryId: f.categoryId.value
   };
-  const res = await fetch('/addChannel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const res = await fetch('/api/addChannel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
   const txt = await res.text();
   showMsg('chanMsg', txt);
   if (res.ok) loadData();
@@ -172,21 +174,21 @@ document.getElementById('channelForm').addEventListener('submit', async (e)=>{
 
 async function deleteCategory(id){
   if(!confirm('Excluir categoria?')) return;
-  const res = await fetch('/deleteCategory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'blemutes', id})});
+  const res = await fetch('/api/deleteCategory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'' , id})});
   const txt = await res.text();
   showMsg('catMsg', txt);
   if (res.ok) loadData();
 }
 async function deleteChannel(id){
   if(!confirm('Excluir canal?')) return;
-  const res = await fetch('/deleteChannel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'blemutes', id})});
+  const res = await fetch('/api/deleteChannel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'', id})});
   const txt = await res.text();
   showMsg('chanMsg', txt);
   if (res.ok) loadData();
 }
 async function deleteUser(username){
   if(!confirm('Excluir usuário?')) return;
-  const res = await fetch('/deleteUser', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'blemutes', username})});
+  const res = await fetch('/api/deleteUser', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'', username})});
   const txt = await res.text();
   showMsg('userMsg', txt);
   if (res.ok) loadData();

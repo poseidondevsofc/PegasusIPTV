@@ -1,13 +1,15 @@
-const { readDB, writeDB } = require('../db');
-module.exports = (req, res) => {
+const db = require('../db');
+module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
-  const { admin_password, id } = req.body;
+  const { admin_password, id } = req.body || {};
   if (admin_password !== 'trouxas') return res.status(401).send('Senha admin incorreta');
-  const db = readDB();
-  const idx = db.categories.findIndex(c=>c.id===id);
-  if (idx===-1) return res.status(404).send('Categoria não encontrada');
-  db.categories.splice(idx,1);
-  db.channels = db.channels.map(ch=> ch.categoryId===id ? {...ch, categoryId:null} : ch);
-  writeDB(db);
-  res.send('Categoria excluída');
+  if (!id) return res.status(400).send('id obrigatório');
+  try {
+    await db.query('DELETE FROM categories WHERE id=$1', [id]);
+    await db.query('UPDATE channels SET category_id=NULL WHERE category_id=$1', [id]);
+    res.send('Categoria excluída');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Erro ao excluir categoria');
+  }
 };

@@ -1,12 +1,14 @@
-const { readDB, writeDB } = require('../db');
-module.exports = (req, res) => {
+const db = require('../db');
+module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
-  const { admin_password, id } = req.body;
+  const { admin_password, id } = req.body || {};
   if (admin_password !== 'trouxas') return res.status(401).send('Senha admin incorreta');
-  const db = readDB();
-  const idx = db.channels.findIndex(c=>c.id===id);
-  if (idx===-1) return res.status(404).send('Canal não encontrado');
-  db.channels.splice(idx,1);
-  writeDB(db);
-  res.send('Canal excluído');
+  if (!id) return res.status(400).send('id obrigatório');
+  try {
+    await db.query('DELETE FROM channels WHERE id=$1', [id]);
+    res.send('Canal excluído');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Erro ao excluir canal');
+  }
 };

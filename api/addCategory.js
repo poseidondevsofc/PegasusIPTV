@@ -1,14 +1,21 @@
-const db = require('../db');
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
-  const { admin_password, name } = req.body || {};
-  if (admin_password !== 'trouxas') return res.status(401).send('Senha admin incorreta');
-  if (!name) return res.status(400).send('name obrigatório');
-  try {
-    await db.query('INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [name]);
-    res.send('Categoria criada');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Erro ao criar categoria');
+import { pool } from "./db.js";
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).send("Método não permitido");
   }
-};
+
+  const { adminPassword, name } = req.body;
+
+  if (adminPassword !== "trouxas") {
+    return res.status(403).send("Senha incorreta");
+  }
+
+  try {
+    await pool.query("INSERT INTO categories (name) VALUES ($1)", [name]);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Erro ao adicionar categoria:", err);
+    res.status(500).send("Erro no servidor: " + err.message);
+  }
+}

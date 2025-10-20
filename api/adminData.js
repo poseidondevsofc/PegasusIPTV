@@ -1,14 +1,18 @@
-const db = require('../db');
+import { pool } from "./db.js";
 
-module.exports = async (req, res) => {
-  if (req.method !== 'GET') return res.status(405).send('Method Not Allowed');
+export default async function handler(req, res) {
   try {
-    const users = (await db.query('SELECT username, display_name, expiration_date FROM users ORDER BY id')).rows;
-    const categories = (await db.query('SELECT id, name FROM categories ORDER BY id')).rows;
-    const channels = (await db.query('SELECT id, name, stream_url, logo_url, category_id FROM channels ORDER BY id')).rows;
-    res.json({ users, categories, channels });
+    const users = await pool.query("SELECT * FROM users");
+    const categories = await pool.query("SELECT * FROM categories");
+    const channels = await pool.query("SELECT * FROM channels");
+
+    res.status(200).json({
+      users: users.rows,
+      categories: categories.rows,
+      channels: channels.rows,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Erro no servidor');
+    console.error("Erro no servidor:", err.message);
+    res.status(500).send("Erro no servidor: " + err.message);
   }
-};
+}

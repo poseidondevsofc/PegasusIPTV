@@ -9,14 +9,14 @@
       {
         "id": "c1",
         "name": "Canal Demo 1",
-        "streamUrl": "http://streaming.example.com/channel1/playlist.m3u8",
+        "streamUrl": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         "logo": "https://via.placeholder.com/150?text=Canal1",
         "category": "Entretenimento"
       },
       {
         "id": "c2",
         "name": "Canal Demo 2",
-        "streamUrl": "http://streaming.example.com/channel2/stream",
+        "streamUrl": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         "logo": "https://via.placeholder.com/150?text=Canal2",
         "category": "Esportes"
       }

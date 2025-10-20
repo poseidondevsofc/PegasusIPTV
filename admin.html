@@ -1,1 +1,110 @@
-<!DOCTYPE html><html><body><h1>Admin Pegasus IPTV</h1></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Painel Admin - Pegasus IPTV</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background:#0f1724; color:#e6eef8; padding:20px;}
+    .wrap { max-width:900px; margin:0 auto; }
+    .card { background:#0b1220; padding:16px; border-radius:8px; margin-bottom:14px; }
+    input, select { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #233042; background:#081020; color:#e6eef8; }
+    button { padding:8px 12px; border-radius:6px; border:none; background:#06b6d4; color:#042; cursor:pointer; }
+    h1,h2 { color:#7ee0ff; }
+    .note { font-size:13px; color:#a9c1d8; }
+    .small { font-size:13px; color:#9fb6c9; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Painel Admin - Pegasus IPTV</h1>
+    <p class="note">Senha do admin: <strong>blemutes</strong></p>
+
+    <div class="card">
+      <h2>Login Admin (para mostrar/ocultar painel)</h2>
+      <input id="adminPass" type="password" placeholder="Senha admin (blemutes)" />
+      <button id="btnLogin">Entrar</button>
+      <div id="loginMsg" class="small"></div>
+    </div>
+
+    <div id="panel" style="display:none;">
+      <div class="card">
+        <h2>Criar usuário</h2>
+        <form id="userForm">
+          <input name="admin_password" placeholder="Senha admin" required />
+          <input name="username" placeholder="Usuário (ex: demo)" required />
+          <input name="password" placeholder="Senha do usuário" required />
+          <input name="displayName" placeholder="Nome exibido (opcional)" />
+          <input name="expiresAt" placeholder="Data de expiração (YYYY-MM-DD) - opcional" />
+          <button type="submit">Criar usuário</button>
+        </form>
+        <div id="userMsg" class="small"></div>
+      </div>
+
+      <div class="card">
+        <h2>Adicionar canal a usuário</h2>
+        <form id="channelForm">
+          <input name="admin_password" placeholder="Senha admin" required />
+          <input name="username" placeholder="Usuário do canal (ex: demo)" required />
+          <input name="name" placeholder="Nome do canal" required />
+          <input name="streamUrl" placeholder="URL do stream (http://... ou https://...)" required />
+          <input name="logo" placeholder="URL do logo (link)" required />
+          <input name="category" placeholder="Categoria (ex: Esportes)" required />
+          <button type="submit">Adicionar canal</button>
+        </form>
+        <div id="chanMsg" class="small"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.getElementById('btnLogin').addEventListener('click', ()=>{
+  const pass = document.getElementById('adminPass').value;
+  const loginMsg = document.getElementById('loginMsg');
+  if (pass === 'blemutes') {
+    document.getElementById('panel').style.display = 'block';
+    loginMsg.textContent = 'Acesso liberado.';
+  } else {
+    loginMsg.textContent = 'Senha incorreta.';
+  }
+});
+
+// create user
+document.getElementById('userForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    admin_password: form.admin_password.value,
+    username: form.username.value.trim(),
+    password: form.password.value,
+    displayName: form.displayName.value,
+    expiresAt: form.expiresAt.value || null
+  };
+  const res = await fetch('/createUser', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  const text = await res.text();
+  document.getElementById('userMsg').textContent = text;
+});
+
+// add channel
+document.getElementById('channelForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    admin_password: form.admin_password.value,
+    username: form.username.value.trim(),
+    name: form.name.value,
+    streamUrl: form.streamUrl.value,
+    logo: form.logo.value,
+    category: form.category.value
+  };
+  const res = await fetch('/addChannel', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  const text = await res.text();
+  document.getElementById('chanMsg').textContent = text;
+});
+</script>
+</body>
+</html>

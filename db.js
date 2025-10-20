@@ -3,9 +3,9 @@ const DB_FILE = './db.json';
 
 function readDB() {
   try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8') || '[]');
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8') || '{}');
   } catch (e) {
-    return [];
+    return { users: [], channels: [], categories: [] };
   }
 }
 

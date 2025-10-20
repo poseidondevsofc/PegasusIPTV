@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Painel Admin - Pegasus IPTV</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background:#0f1724; color:#e6eef8; padding:20px;}
+    .wrap { max-width:900px; margin:0 auto; }
+    .card { background:#0b1220; padding:16px; border-radius:8px; margin-bottom:14px; }
+    input, select { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #233042; background:#081020; color:#e6eef8; }
+    button { padding:8px 12px; border-radius:6px; border:none; background:#06b6d4; color:#042; cursor:pointer; }
+    h1,h2 { color:#7ee0ff; }
+    .note { font-size:13px; color:#a9c1d8; }
+    .small { font-size:13px; color:#9fb6c9; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:8px; border-bottom:1px solid #132033; text-align:left; }
+    .actions button { margin-right:6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Painel Admin - Pegasus IPTV</h1>
+    <p class="note">Senha do admin: <strong>blemutes</strong></p>
 
+    <div class="card">
+      <h2>Login Admin (para mostrar/ocultar painel)</h2>
+      <input id="adminPass" type="password" placeholder="Senha admin (blemutes)" />
+      <button id="btnLogin">Entrar</button>
+      <div id="loginMsg" class="small"></div>
+    </div>
+
+    <div id="panel" style="display:none;">
+      <div class="card">
+        <h2>Criar usuário</h2>
+        <form id="userForm">
+          <input name="admin_password" placeholder="Senha admin" required />
+          <input name="username" placeholder="Usuário (ex: demo)" required />
+          <input name="password" placeholder="Senha do usuário" required />
+          <input name="displayName" placeholder="Nome exibido (opcional)" />
+          <input name="expiresAt" placeholder="Data de expiração (YYYY-MM-DD) - obrigatório" required />
+          <button type="submit">Criar usuário</button>
+        </form>
+        <div id="userMsg" class="small"></div>
+      </div>
+
+      <div class="card">
+        <h2>Gerenciar Categorias</h2>
+        <form id="catForm">
+          <input name="admin_password" placeholder="Senha admin" required />
+          <input name="name" placeholder="Nome da categoria" required />
+          <button type="submit">Adicionar categoria</button>
+        </form>
+        <div id="catMsg" class="small"></div>
+
+        <h3>Categorias existentes</h3>
+        <div id="catList">carregando...</div>
+      </div>
+
+      <div class="card">
+        <h2>Adicionar canal</h2>
+        <form id="channelForm">
+          <input name="admin_password" placeholder="Senha admin" required />
+          <input name="name" placeholder="Nome do canal" required />
+          <input name="streamUrl" placeholder="URL do stream (http://... ou https://...)" required />
+          <input name="logo" placeholder="URL do logo (link)" required />
+          <select name="categoryId" required id="categorySelect">
+            <option value="">Carregando categorias...</option>
+          </select>
+          <button type="submit">Adicionar canal</button>
+        </form>
+        <div id="chanMsg" class="small"></div>
+      </div>
+
+      <div class="card">
+        <h2>Canais existentes</h2>
+        <div id="chanList">carregando...</div>
+      </div>
+
+      <div class="card">
+        <h2>Usuários existentes</h2>
+        <div id="userList">carregando...</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function showMsg(id, txt){ document.getElementById(id).textContent = txt; setTimeout(()=>document.getElementById(id).textContent='',3000); }
+
+document.getElementById('btnLogin').addEventListener('click', ()=>{
+  const pass = document.getElementById('adminPass').value;
+  const loginMsg = document.getElementById('loginMsg');
+  if (pass === 'blemutes') {
+    document.getElementById('panel').style.display = 'block';
+    loginMsg.textContent = 'Acesso liberado.';
+    loadData();
+  } else {
+    loginMsg.textContent = 'Senha incorreta.';
+  }
+});
+
+async function loadData(){
+  const res = await fetch('/admin/data');
+  const j = await res.json();
+  // categories
+  const catList = document.getElementById('catList');
+  const sel = document.getElementById('categorySelect');
+  sel.innerHTML = '<option value="">-- selecione --</option>';
+  catList.innerHTML = '';
+  j.categories.forEach(c=>{
+    catList.innerHTML += `<div><strong>${c.name}</strong> <button onclick="deleteCategory('${c.id}')">Excluir</button></div>`;
+    sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  });
+  // channels
+  const chanList = document.getElementById('chanList');
+  chanList.innerHTML = '<table><tr><th>Nome</th><th>Categoria</th><th>Link</th><th>Ações</th></tr>';
+  j.channels.forEach(ch=>{
+    const cat = j.categories.find(x=>x.id===ch.categoryId);
+    chanList.innerHTML += `<tr><td>${ch.name}</td><td>${cat?cat.name:'--'}</td><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;">${ch.streamUrl}</td><td class="actions"><button onclick="deleteChannel('${ch.id}')">Excluir</button></td></tr>`;
+  });
+  chanList.innerHTML += '</table>';
+  // users
+  const userList = document.getElementById('userList');
+  userList.innerHTML = '<table><tr><th>Usuário</th><th>Nome</th><th>Expira</th><th>Ações</th></tr>';
+  j.users.forEach(u=>{
+    userList.innerHTML += `<tr><td>${u.username}</td><td>${u.displayName||''}</td><td>${u.expiresAt||''}</td><td><button onclick="deleteUser('${u.username}')">Excluir</button></td></tr>`;
+  });
+  userList.innerHTML += '</table>';
+}
+
+document.getElementById('userForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = e.target;
+  const payload = {
+    admin_password: f.admin_password.value,
+    username: f.username.value.trim(),
+    password: f.password.value,
+    displayName: f.displayName.value,
+    expiresAt: f.expiresAt.value
+  };
+  const res = await fetch('/createUser', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const txt = await res.text();
+  showMsg('userMsg', txt);
+  if (res.ok) loadData();
+});
+
+document.getElementById('catForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = e.target;
+  const payload = { admin_password: f.admin_password.value, name: f.name.value.trim() };
+  const res = await fetch('/addCategory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const txt = await res.text();
+  showMsg('catMsg', txt);
+  if (res.ok) loadData();
+});
+
+document.getElementById('channelForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = e.target;
+  const payload = {
+    admin_password: f.admin_password.value,
+    name: f.name.value,
+    streamUrl: f.streamUrl.value,
+    logo: f.logo.value,
+    categoryId: f.categoryId.value
+  };
+  const res = await fetch('/addChannel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const txt = await res.text();
+  showMsg('chanMsg', txt);
+  if (res.ok) loadData();
+});
+
+async function deleteCategory(id){
+  if(!confirm('Excluir categoria?')) return;
+  const res = await fetch('/deleteCategory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'blemutes', id})});
+  const txt = await res.text();
+  showMsg('catMsg', txt);
+  if (res.ok) loadData();
+}
+async function deleteChannel(id){
+  if(!confirm('Excluir canal?')) return;
+  const res = await fetch('/deleteChannel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'blemutes', id})});
+  const txt = await res.text();
+  showMsg('chanMsg', txt);
+  if (res.ok) loadData();
+}
+async function deleteUser(username){
+  if(!confirm('Excluir usuário?')) return;
+  const res = await fetch('/deleteUser', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({admin_password:document.querySelector('input[name=admin_password]').value||'blemutes', username})});
+  const txt = await res.text();
+  showMsg('userMsg', txt);
+  if (res.ok) loadData();
+}
+</script>
+</body>
+</html>

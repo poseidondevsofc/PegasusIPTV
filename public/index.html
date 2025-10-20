@@ -1,1 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Pegasus IPTV - Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background:#f4f7fb; color:#222; padding:30px; }
+    .card { max-width:900px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.08); }
+    form { display:flex; gap:10px; justify-content:center; margin-bottom:10px; }
+    input { padding:8px 12px; border-radius:6px; border:1px solid #ddd; }
+    button { padding:8px 14px; border-radius:6px; border:none; background:#0b84ff; color:#fff; cursor:pointer; }
+    .error { color:#b00020; }
+    .credentials { background:#eef6ff; padding:10px; border-radius:6px; margin-bottom:15px; }
+    .category { margin-top:15px; }
+    .channel { display:flex; align-items:center; gap:10px; padding:8px 6px; border-bottom:1px solid #eee; }
+    .channel img { width:56px; height:40px; object-fit:cover; border-radius:4px; }
+    .channel a { color:#0b84ff; text-decoration:none; }
+    .meta { font-size:13px; color:#666; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Pegasus IPTV</h1>
+    <p>Entre com seu usuário e senha para ver os canais por categoria (e as credenciais para usar no XCIPTV).</p>
 
+    <form id="loginForm">
+      <input id="user" placeholder="Usuário" required>
+      <input id="pass" placeholder="Senha" type="password" required>
+      <button type="submit">Entrar</button>
+    </form>
+
+    <div id="error" class="error"></div>
+    <div id="content"></div>
+  </div>
+
+<script>
+const form = document.getElementById('loginForm');
+const content = document.getElementById('content');
+const errorBox = document.getElementById('error');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.textContent = '';
+  content.innerHTML = 'Carregando...';
+  const user = document.getElementById('user').value.trim();
+  const pass = document.getElementById('pass').value.trim();
+
+  try {
+    const res = await fetch(`/view?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
+    const text = await res.text();
+    if (res.ok) {
+      content.innerHTML = text;
+    } else {
+      content.innerHTML = '';
+      errorBox.textContent = text;
+    }
+  } catch (err) {
+    content.innerHTML = '';
+    errorBox.textContent = 'Erro no servidor: ' + err.message;
+  }
+});
+</script>
+</body>
+</html>

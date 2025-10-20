@@ -1,0 +1,25 @@
+[
+  {
+    "id": "user1",
+    "username": "demo",
+    "displayName": "Demo User",
+    "passwordHash": "$2a$12$CGZMkL0pmZ5ElHLTWb2P6egLE2rR6NSH5goEkta6Jlgc681l2kkPa",
+    "expiresAt": null,
+    "channels": [
+      {
+        "id": "c1",
+        "name": "Canal Demo 1",
+        "streamUrl": "http://streaming.example.com/channel1/playlist.m3u8",
+        "logo": "https://via.placeholder.com/150?text=Canal1",
+        "category": "Entretenimento"
+      },
+      {
+        "id": "c2",
+        "name": "Canal Demo 2",
+        "streamUrl": "http://streaming.example.com/channel2/stream",
+        "logo": "https://via.placeholder.com/150?text=Canal2",
+        "category": "Esportes"
+      }
+    ]
+  }
+]

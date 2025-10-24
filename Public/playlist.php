@@ -1,0 +1,1 @@
+<?php echo 'Playlist M3U'; ?>

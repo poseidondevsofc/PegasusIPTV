@@ -1,6 +1,13 @@
 <?php
-// DB connection and init (SQLite)
-$dbFile = __DIR__ . '/../storage/pegasus.db';
+// DB connection and init (SQLite) - Render + Docker
+
+// Caminho do banco dentro do Docker (storage dentro de public)
+$dbDir = __DIR__ . '/../storage';
+if (!is_dir($dbDir)) {
+    mkdir($dbDir, 0777, true); // Cria a pasta storage se não existir
+}
+
+$dbFile = $dbDir . '/pegasus.db';
 $need_init = !file_exists($dbFile);
 
 try {
@@ -11,7 +18,7 @@ try {
 }
 
 if ($need_init) {
-    // Criação das tabelas usando heredoc
+    // Criação das tabelas
     $db->exec(<<<SQL
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,10 +45,18 @@ CREATE TABLE IF NOT EXISTS vod (
 SQL
     );
 
-    // Insert default admin
+    // Criação do admin padrão via variáveis de ambiente
     $admin = getenv('ADMIN_USER') ?: 'admin';
     $pass = getenv('ADMIN_PASS') ?: 'admin';
+
+    // Você pode criptografar a senha se quiser, por exemplo usando password_hash:
+    $pass_hash = password_hash($pass, PASSWORD_DEFAULT);
+
     $stmt = $db->prepare("INSERT OR IGNORE INTO users (username,password,is_admin,active) VALUES (?,?,1,1)");
-    $stmt->execute([$admin, $pass]);
+    $stmt->execute([$admin, $pass_hash]);
 }
+
+// Teste rápido de escrita (opcional, pode comentar depois)
+// file_put_contents($dbDir . '/test.txt', 'OK');
+
 ?>
